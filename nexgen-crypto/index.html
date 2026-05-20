@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexGen | Premium Crypto & NFT Hub</title>
+    
+    <!-- Google Fonts & Tailwind -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: {
+                        brand: { dark: '#080b14', primary: '#3b82f6', secondary: '#8b5cf6' }
+                    },
+                    animation: {
+                        'marquee': 'marquee 25s linear infinite',
+                        'slide-in': 'slideIn 0.3s ease-out forwards',
+                        'fade-out': 'fadeOut 0.3s ease-in 2.7s forwards',
+                    },
+                    keyframes: {
+                        marquee: {
+                            '0%': { transform: 'translateX(0)' },
+                            '100%': { transform: 'translateX(-50%)' },
+                        },
+                        slideIn: {
+                            '0%': { transform: 'translateX(100%)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' },
+                        },
+                        fadeOut: {
+                            '0%': { opacity: '1' },
+                            '100%': { opacity: '0' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer components {
+            .glass-card {
+                @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl transition-all duration-300;
+            }
+            .btn-primary {
+                @apply bg-gradient-to-r from-blue-600 to-purple-600 hover:scale-105 active:scale-95 transition-all px-8 py-3 rounded-full font-bold text-sm uppercase tracking-wider shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.6)];
+            }
+            .hero-glow {
+                background: radial-gradient(circle at 50% -20%, rgba(59, 130, 246, 0.15), transparent 50%),
+                            radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.1), transparent 40%);
+            }
+        }
+        
+        /* Hide scrollbar for clean marquee */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+
+<body class="bg-brand-dark text-slate-100 hero-glow min-h-screen overflow-x-hidden">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- Live Market Ticker -->
+    <div class="fixed top-0 w-full z-[101] bg-black/60 backdrop-blur-md border-b border-white/10 py-2 overflow-hidden flex font-mono text-xs font-semibold tracking-wider">
+        <div id="ticker-content" class="animate-marquee flex whitespace-nowrap w-max gap-12 px-6">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-[100] top-[33px] bg-brand-dark/50 backdrop-blur-md border-b border-white/5 px-6 py-4 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="text-2xl font-extrabold tracking-tighter bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent cursor-pointer" onclick="window.scrollTo(0,0)">
+                NEXGEN
+            </div>
+            
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex space-x-10 text-sm font-semibold opacity-80">
+                <a href="#market" class="hover:text-blue-400 hover:opacity-100 transition">Market</a>
+                <a href="#nfts" class="hover:text-blue-400 hover:opacity-100 transition">NFTs</a>
+                <a href="#guide" class="hover:text-blue-400 hover:opacity-100 transition">Academy</a>
+            </div>
+            
+            <button id="btn-wallet" class="hidden md:block btn-primary" onclick="connectWallet()">Connect Wallet</button>
+
+            <!-- Mobile Hamburger -->
+            <button id="mobile-menu-btn" class="md:hidden text-white p-2 focus:outline-none" aria-label="Toggle Menu">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Slide-out Menu -->
+    <div id="mobile-menu" class="fixed inset-0 bg-brand-dark/95 backdrop-blur-xl z-[150] translate-x-full transition-transform duration-300 flex flex-col justify-center items-center gap-8">
+        <button id="close-menu-btn" class="absolute top-6 right-6 text-white p-2">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+        <a href="#market" class="text-2xl font-bold hover:text-blue-400 transition mobile-link">Market</a>
+        <a href="#nfts" class="text-2xl font-bold hover:text-blue-400 transition mobile-link">NFTs</a>
+        <a href="#guide" class="text-2xl font-bold hover:text-blue-400 transition mobile-link">Academy</a>
+        <button class="btn-primary mt-4" onclick="connectWallet(); document.getElementById('close-menu-btn').click();">Connect Wallet</button>
+    </div>
+
+    <!-- Hero Section -->
+    <header class="relative pt-52 pb-32 px-6 overflow-hidden">
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <span class="inline-block px-4 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold mb-6 border border-blue-500/20 animate-pulse">
+                🟢 LIVE NETWORK V2.0
+            </span>
+            <h1 class="text-5xl md:text-8xl font-extrabold mb-8 leading-tight tracking-tight">
+                Own the <span class="bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent">Digital</span> Renaissance.
+            </h1>
+            <p class="text-slate-400 max-w-xl mx-auto mb-12 text-lg leading-relaxed">
+                A high-frequency trading engine for crypto and a curated boutique for NFTs. All wrapped in a seamless glass interface.
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-6">
+                <a href="#market" class="btn-primary inline-flex justify-center items-center">Start Trading</a>
+                <a href="#nfts" class="glass-card px-8 py-3 rounded-full font-bold hover:bg-white hover:text-black active:scale-95 text-center transition-all">Explore NFTs</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Asset Market -->
+    <section id="market" class="px-6 py-24 max-w-7xl mx-auto scroll-mt-20">
+        <div class="flex justify-between items-end mb-12">
+            <h2 class="text-4xl font-bold">Live Market</h2>
+            <p class="text-blue-400 text-sm font-semibold cursor-pointer hover:underline" onclick="showToast('Loading full exchange...', 'info')">View full exchange →</p>
+        </div>
+        <div id="crypto-container" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- JavaScript Injected -->
+        </div>
+    </section>
+
+    <!-- NFT Gallery -->
+    <section id="nfts" class="py-24 px-6 bg-blue-500/[0.02] scroll-mt-20 border-y border-white/5">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex justify-between items-end mb-12">
+                <h2 class="text-4xl font-bold">Featured Drops</h2>
+                <div class="flex gap-2">
+                    <button class="w-10 h-10 rounded-full glass-card flex items-center justify-center hover:bg-white/10 transition">←</button>
+                    <button class="w-10 h-10 rounded-full glass-card flex items-center justify-center hover:bg-white/10 transition">→</button>
+                </div>
+            </div>
+            <div id="nft-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- JavaScript Injected -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter & Guide Footer -->
+    <footer id="guide" class="py-20 px-6 max-w-7xl mx-auto scroll-mt-20">
+        <div class="glass-card p-8 md:p-12 rounded-[40px] flex flex-col lg:flex-row items-center justify-between gap-12">
+            <div class="lg:w-1/2">
+                <h3 class="text-3xl font-bold mb-4">Master the Web3 Era</h3>
+                <p class="text-slate-400 mb-6">Join 50,000+ traders. Get our weekly insights, airdrop alerts, and a free guide on cold storage security.</p>
+                <div class="flex gap-4">
+                    <div class="flex -space-x-4">
+                        <div class="w-10 h-10 rounded-full bg-blue-500 border-2 border-[#080b14] flex items-center justify-center text-xs">👤</div>
+                        <div class="w-10 h-10 rounded-full bg-purple-500 border-2 border-[#080b14] flex items-center justify-center text-xs">👤</div>
+                        <div class="w-10 h-10 rounded-full bg-green-500 border-2 border-[#080b14] flex items-center justify-center text-xs">👤</div>
+                    </div>
+                    <span class="text-sm text-slate-500 flex items-center">Trusted by experts</span>
+                </div>
+            </div>
+            
+            <div class="lg:w-1/2 w-full">
+                <form id="newsletter-form" class="flex flex-col sm:flex-row gap-4" onsubmit="handleSubscribe(event)">
+                    <input type="email" id="email-input" required placeholder="Enter your email address" class="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition text-white placeholder-slate-500">
+                    <button type="submit" id="btn-subscribe" class="btn-primary py-4 rounded-2xl whitespace-nowrap">Subscribe Now</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="mt-20 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500 gap-4">
+            <p>&copy; 2024 NexGen Global. All rights reserved.</p>
+            <div class="flex gap-6">
+                <a href="#" class="hover:text-white transition">Terms</a>
+                <a href="#" class="hover:text-white transition">Privacy</a>
+                <a href="#" class="hover:text-white transition">Security</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // --- 1. Data Definitions ---
+        const marketData = [
+            { id: 'btc', name: 'Bitcoin', symbol: 'BTC', price: 64230.50, change: 2.4, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+            { id: 'eth', name: 'Ethereum', symbol: 'ETH', price: 3450.12, change: 5.1, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+            { id: 'sol', name: 'Solana', symbol: 'SOL', price: 145.80, change: -1.2, color: 'text-purple-500', bg: 'bg-purple-500/10' }
+        ];
+
+        const nftData = [
+            { id: 'n1', name: 'Cyber Neon #1', price: '1.2 ETH', img: '💎', creator: '@0xNeon' },
+            { id: 'n2', name: 'Void Walker', price: '0.8 ETH', img: '🌪️', creator: '@Abyssart' },
+            { id: 'n3', name: 'Solace Pulse', price: '2.5 ETH', img: '🌊', creator: '@WaveGen' },
+            { id: 'n4', name: 'Ether Bloom', price: '0.4 ETH', img: '🌸', creator: '@FloraNFT' }
+        ];
+
+        // --- 2. Component Rendering ---
+        function formatCurrency(num) {
+            return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function renderMarket() {
+            const container = document.getElementById('crypto-container');
+            container.innerHTML = marketData.map(coin => `
+                <div class="glass-card p-8 rounded-[32px] hover:-translate-y-2 group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="p-4 ${coin.bg} ${coin.color} rounded-2xl font-black">${coin.symbol}</div>
+                        <span class="${coin.change > 0 ? 'text-green-400 bg-green-400/10' : 'text-red-400 bg-red-400/10'} px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+                            ${coin.change > 0 ? '↑' : '↓'} ${Math.abs(coin.change)}%
+                        </span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-1">${coin.name}</h3>
+                    <p class="text-3xl font-light opacity-90">${formatCurrency(coin.price)}</p>
+                    <button onclick="tradeAsset('${coin.symbol}')" class="w-full mt-8 py-3 rounded-2xl border border-white/10 group-hover:bg-white group-hover:text-black active:scale-95 transition-all font-bold">Quick Buy</button>
+                </div>
+            `).join('');
+        }
+
+        function renderNFTs() {
+            const container = document.getElementById('nft-container');
+            container.innerHTML = nftData.map(nft => `
+                <div class="glass-card overflow-hidden rounded-[32px] group flex flex-col">
+                    <div class="h-64 flex items-center justify-center text-7xl bg-gradient-to-br from-white/5 to-transparent group-hover:scale-110 transition duration-500 cursor-pointer">
+                        ${nft.img}
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col justify-between z-10 bg-brand-dark/40 backdrop-blur-sm">
+                        <div>
+                            <p class="text-xs text-blue-400 font-mono mb-1">${nft.creator}</p>
+                            <h4 class="font-bold text-xl mb-4">${nft.name}</h4>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-4 pb-4 border-b border-white/10">
+                                <span class="text-xs uppercase tracking-widest opacity-50">Top Bid</span>
+                                <span class="font-bold text-white">${nft.price}</span>
+                            </div>
+                            <button onclick="placeBid('${nft.name}', '${nft.price}')" class="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-blue-500 hover:text-white active:scale-95 transition-all shadow-lg">Place Bid</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTicker() {
+            // Create a larger array for continuous scroll effect
+            const tickerItems = [...marketData, ...marketData, ...marketData];
+            const container = document.getElementById('ticker-content');
+            
+            // Render it twice to allow for seamless CSS transform loop
+            const tickerHTML = tickerItems.map(coin => `
+                <div class="flex items-center gap-2">
+                    <span class="text-white/50">${coin.symbol}</span>
+                    <span class="text-white">${formatCurrency(coin.price)}</span>
+                    <span class="${coin.change > 0 ? 'text-green-400' : 'text-red-400'}">${coin.change > 0 ? '+' : ''}${coin.change}%</span>
+                </div>
+                <div class="w-1.5 h-1.5 rounded-full bg-white/20"></div>
+            `).join('');
+
+            container.innerHTML = tickerHTML + tickerHTML; 
+        }
+
+        // --- 3. Interactive Behaviors & UX ---
+
+        // Custom Toast Notification System
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const colors = {
+                success: 'border-green-500/50 bg-green-500/10 text-green-400',
+                info: 'border-blue-500/50 bg-blue-500/10 text-blue-400',
+                error: 'border-red-500/50 bg-red-500/10 text-red-400'
+            };
+
+            toast.className = `glass-card border ${colors[type]} px-6 py-4 rounded-xl shadow-2xl animate-slide-in pointer-events-auto flex items-center gap-3`;
+            toast.innerHTML = `
+                <div class="w-2 h-2 rounded-full ${type === 'success' ? 'bg-green-400' : type === 'info' ? 'bg-blue-400' : 'bg-red-400'} animate-pulse"></div>
+                <p class="font-semibold text-sm">${message}</p>
+            `;
+
+            container.appendChild(toast);
+
+            // Trigger fade out and remove
+            setTimeout(() => {
+                toast.classList.add('animate-fade-out');
+                setTimeout(() => toast.remove(), 300); // Wait for fade out animation
+            }, 2700);
+        }
+
+        // Simulated Actions
+        let isConnected = false;
+        function connectWallet() {
+            const btn = document.getElementById('btn-wallet');
+            if (isConnected) {
+                showToast('Wallet already connected.', 'info');
+                return;
+            }
+            
+            // Loading State
+            btn.innerHTML = '<span class="animate-pulse">Connecting...</span>';
+            btn.classList.add('opacity-80', 'cursor-not-allowed');
+            
+            setTimeout(() => {
+                isConnected = true;
+                btn.innerHTML = '🟢 0x7a...4F9';
+                btn.classList.remove('opacity-80', 'cursor-not-allowed');
+                btn.classList.add('border', 'border-green-500/50', 'bg-none', 'bg-transparent');
+                showToast('Wallet connected successfully!', 'success');
+            }, 1500);
+        }
+
+        function tradeAsset(symbol) {
+            if (!isConnected) {
+                showToast(`Connect wallet to buy ${symbol}`, 'error');
+                return;
+            }
+            showToast(`Initiating smart contract for ${symbol}...`, 'info');
+            setTimeout(() => showToast(`Successfully purchased ${symbol}!`, 'success'), 2000);
+        }
+
+        function placeBid(nftName, price) {
+            if (!isConnected) {
+                showToast('Wallet connection required to bid.', 'error');
+                return;
+            }
+            showToast(`Confirm transaction in wallet for ${price}`, 'info');
+            setTimeout(() => showToast(`Bid placed on ${nftName}!`, 'success'), 1500);
+        }
+
+        function handleSubscribe(e) {
+            e.preventDefault(); // Prevent page reload
+            const email = document.getElementById('email-input').value;
+            const btn = document.getElementById('btn-subscribe');
+            
+            btn.innerHTML = 'Sending...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                document.getElementById('email-input').value = '';
+                btn.innerHTML = '✓ Subscribed';
+                btn.classList.replace('from-blue-600', 'from-green-600');
+                btn.classList.replace('to-purple-600', 'to-green-500');
+                showToast(`Welcome to the academy! Check ${email}`, 'success');
+                
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                    btn.innerHTML = 'Subscribe Now';
+                    btn.disabled = false;
+                    btn.classList.replace('from-green-600', 'from-blue-600');
+                    btn.classList.replace('to-green-500', 'to-purple-600');
+                }, 3000);
+            }, 1000);
+        }
+
+        // --- 4. Mobile Menu Toggle ---
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const closeBtn = document.getElementById('close-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileLinks = document.querySelectorAll('.mobile-link');
+
+        function toggleMenu() {
+            mobileMenu.classList.toggle('translate-x-full');
+            document.body.classList.toggle('overflow-hidden'); // Prevent background scrolling
+        }
+
+        mobileBtn.addEventListener('click', toggleMenu);
+        closeBtn.addEventListener('click', toggleMenu);
+        mobileLinks.forEach(link => link.addEventListener('click', toggleMenu));
+
+        // --- 5. Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTicker();
+            renderMarket();
+            renderNFTs();
+        });
+
+    </script>
+</body>
+</html>
